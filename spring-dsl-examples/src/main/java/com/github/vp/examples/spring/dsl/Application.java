@@ -1,94 +1,63 @@
 package com.github.vp.examples.spring.dsl;
 
-import org.aopalliance.aop.Advice;
-import org.aopalliance.intercept.MethodInvocation;
+import com.github.vp.examples.spring.dsl.event.SampleEvent1;
+import com.github.vp.examples.spring.dsl.event.SampleEvent2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.integration.annotation.Gateway;
-import org.springframework.integration.annotation.IntegrationComponentScan;
-import org.springframework.integration.annotation.MessagingGateway;
-import org.springframework.integration.channel.DirectChannel;
-import org.springframework.integration.channel.PublishSubscribeChannel;
-import org.springframework.integration.dsl.IntegrationFlow;
-import org.springframework.integration.dsl.IntegrationFlows;
-import org.springframework.integration.dsl.channel.MessageChannels;
-import org.springframework.integration.handler.advice.AbstractHandleMessageAdvice;
-import org.springframework.integration.handler.advice.AbstractRequestHandlerAdvice;
-import org.springframework.integration.handler.advice.HandleMessageAdvice;
-import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.GenericMessage;
+
+import static com.github.vp.examples.spring.dsl.config.EventHandlingConfiguration.*;
 
 /**
  * Created by vimalpar on 22/07/17.
  */
-@Configuration
 @SpringBootApplication
-@IntegrationComponentScan
-@EnableAspectJAutoProxy
 public class Application {
     private final static Logger logger = LoggerFactory.getLogger(Application.class);
 
     public static void main(String[] args) throws InterruptedException {
         ConfigurableApplicationContext ctx = SpringApplication.run(Application.class, args);
 
-        DirectChannel channel = (DirectChannel) ctx.getBean("direct.input");
-        channel.send(new GenericMessage<>(new SampleEvent("1", "name", "description")));
-        channel.send(new GenericMessage<>("Another Event"));
-        channel.send(new GenericMessage<>(new SampleEvent("2", "name2", "description2")));
+        MessageChannel sourceEventChannel = ctx.getBean(SOURCE_EVENT_CHANNEL, MessageChannel.class);
+        MessageChannel nonQueryEventChannel = ctx.getBean(NON_QUERY_EVENT_CHANNEL, MessageChannel.class);
+        MessageChannel queryEventChannel = ctx.getBean(QUERY_EVENT_CHANNEL, MessageChannel.class);
+
+        SampleEvent1 sampleEvent1 = new SampleEvent1("1");
+        SampleEvent2 sampleEvent2 = new SampleEvent2("2");
+        String stringEvent = "Hello World!";
+
+        send(sourceEventChannel, sampleEvent1, sampleEvent2, stringEvent);
+        send(nonQueryEventChannel, sampleEvent1, sampleEvent2, stringEvent);
+        send(queryEventChannel, sampleEvent1, sampleEvent2, stringEvent);
 
         Thread.sleep(10000);
         ctx.close();
     }
 
-  /*  @MessagingGateway
-    public interface EventGateway {
-        @Gateway(requestChannel = "event.input")
-        float sendObject(Object event);
-    }*/
+    public static void send(MessageChannel messageChannel, SampleEvent1 event1, SampleEvent2 event2, String stringEvent) {
+        logger.info("------------------------------------------------------------------------------------------------------");
+        logger.info("Submitted {} to {} channel", event1, messageChannel);
+        send(messageChannel, new GenericMessage<>(event1));
 
-    @Bean("direct.input")
-    public DirectChannel directChannel() {
-        return new DirectChannel();
+        logger.info("Submitted {} to {} channel", event2, messageChannel);
+        send(messageChannel, new GenericMessage<>(event2));
+
+        logger.info("Submitted String event to {} channel", messageChannel);
+        send(messageChannel, new GenericMessage<>(stringEvent));
+        logger.info("------------------------------------------------------------------------------------------------------");
     }
 
-    @Bean
-    public IntegrationFlow convert() {
-        return IntegrationFlows
-                .from("direct.input")
-                .channel(eventIn())
-                .get();
+    private static void send(MessageChannel messageChannel, GenericMessage<?> message) {
+        try {
+            messageChannel.send(message);
+        }catch (Exception ex) {
+            logger.info("Caught exception while processing message: {} - Error: {}", message, ex.getMessage());
+        }
     }
 
-    @Bean(name = "event-in")
-    public PublishSubscribeChannel eventIn() {
-        return MessageChannels
-                .publishSubscribe("even-in")
-                .get();
-    }
 
-    @Bean("message-advice")
-    public Advice handleMessageAdvice() {
-        return new AbstractRequestHandlerAdvice() {
-            @Override
-            protected Object doInvoke(ExecutionCallback callback, Object target, Message<?> message) throws Exception {
-                logger.info("Advice target " + target.getClass());
-                return callback.execute();
-            }
-        };
-        /*return methodInvocation -> {
-            try {
-                logger.info("Advice: {}", methodInvocation.getArguments()[0].getClass());
-                return methodInvocation.proceed();
-            }catch (RuntimeException ex) {
-                logger.info("exception: ", ex);
-                return null;
-            }
-        };*/
-    }
 }

@@ -11,11 +11,11 @@ import java.lang.reflect.Method;
 /**
  * Created by vimalpar on 23/07/17.
  */
-public class CustomServiceActivatorHandler extends ServiceActivatingHandler {
-    private final static Logger logger = LoggerFactory.getLogger(CustomServiceActivatorHandler.class);
+public class EventHandlingServiceActivatorHandler extends ServiceActivatingHandler {
+    private final static Logger logger = LoggerFactory.getLogger(EventHandlingServiceActivatorHandler.class);
     private Method method;
 
-    public CustomServiceActivatorHandler(Object object, Method method) {
+    public EventHandlingServiceActivatorHandler(Object object, Method method) {
         super(object, method);
         this.method = method;
     }

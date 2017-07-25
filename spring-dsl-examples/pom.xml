@@ -7,7 +7,7 @@
     <artifactId>spring-boot-examples</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
-  <artifactId>spring-bean-config-examples</artifactId>
+  <artifactId>spring-dsl-examples</artifactId>
   <version>1.0-SNAPSHOT</version>
   <name>spring-dsl-examples</name>
   <url>http://maven.apache.org</url>
@@ -17,30 +17,10 @@
   </properties>
 
   <dependencies>
-    <!--<dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-actuator</artifactId>
-    </dependency>-->
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-aop</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.aspectj</groupId>
-      <artifactId>aspectjrt</artifactId>
-      <version>1.6.11</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.aspectj</groupId>
-      <artifactId>aspectjweaver</artifactId>
-      <version>1.6.11</version>
-    </dependency>
-
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
